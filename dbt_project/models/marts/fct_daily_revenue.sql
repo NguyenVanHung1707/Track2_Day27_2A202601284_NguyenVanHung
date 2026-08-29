@@ -1,6 +1,6 @@
--- NOTE: This model is intentionally simple. If the customer dimension has more
--- than one active row per customer, the join can inflate revenue without a SQL
--- error. Students should add tests/unit tests that expose this failure mode.
+-- Model: fct_daily_revenue
+-- Calculates daily completed-order revenue for executive reporting.
+-- Enhanced with customer deduplication to protect against SCD duplicate-active-row revenue inflation.
 
 with completed_orders as (
     select *
@@ -8,7 +8,7 @@ with completed_orders as (
     where status = 'completed'
 ),
 active_customers as (
-    select *
+    select distinct customer_id
     from {{ ref('stg_customers') }}
     where is_active = true
 )

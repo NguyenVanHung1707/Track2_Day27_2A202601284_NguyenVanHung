@@ -7,7 +7,11 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "contracts" / "orders_contract.yaml"
 
 
+from datetime import datetime, timedelta, timezone
+
+
 def healthy_df():
+    now = datetime.now(timezone.utc)
     return pd.DataFrame([
         {
             "order_id": 1,
@@ -15,8 +19,8 @@ def healthy_df():
             "amount": 10.0,
             "currency": "USD",
             "status": "completed",
-            "created_at": "2026-08-28T10:00:00Z",
-            "updated_at": "2026-08-28T10:05:00Z",
+            "created_at": (now - timedelta(minutes=10)).isoformat(),
+            "updated_at": (now - timedelta(minutes=5)).isoformat(),
         },
         {
             "order_id": 2,
@@ -24,8 +28,8 @@ def healthy_df():
             "amount": 20.0,
             "currency": "USD",
             "status": "pending",
-            "created_at": "2026-08-28T10:01:00Z",
-            "updated_at": "2026-08-28T10:06:00Z",
+            "created_at": (now - timedelta(minutes=9)).isoformat(),
+            "updated_at": (now - timedelta(minutes=4)).isoformat(),
         },
     ])
 
@@ -50,3 +54,20 @@ def test_invalid_currency_is_detected():
     df.loc[0, "currency"] = "BTC"
     issues = failed(validate_orders(df, CONTRACT))
     assert any(i["check"] == "accepted_values" and i["column"] == "currency" for i in issues)
+
+
+def test_type_drift_is_detected():
+    df = healthy_df()
+    df.loc[0, "order_id"] = "not_an_int"
+    issues = failed(validate_orders(df, CONTRACT))
+    assert any(i["check"] == "type" and i["column"] == "order_id" for i in issues)
+
+
+def test_stale_data_freshness_is_detected():
+    df = healthy_df()
+    now = datetime.now(timezone.utc)
+    # Stale: updated 120 minutes ago (max allowed is 30 minutes)
+    df["updated_at"] = (now - timedelta(minutes=120)).isoformat()
+    issues = failed(validate_orders(df, CONTRACT))
+    assert any(i["check"] == "freshness" and i["column"] == "updated_at" for i in issues)
+
