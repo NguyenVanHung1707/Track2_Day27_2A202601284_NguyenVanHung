@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-29T08:54:02.713365+00:00",
+  "timestamp": "2026-08-29T09:01:15.369266+00:00",
   "orders_rows": 600,
   "failed_contract_checks": 0,
   "critical_contract_failures": 0,
@@ -9,7 +9,7 @@
     "method": "auto:mad",
     "reason": "median=252.500, mad=12.500, threshold=3.5; routing=segment_dow=5"
   },
-  "freshness_minutes": 5.028260966666666,
+  "freshness_minutes": 5.022515350000001,
   "kb_failed_checks": 0,
   "kb_text_length_signal": {
     "is_anomaly": false,
